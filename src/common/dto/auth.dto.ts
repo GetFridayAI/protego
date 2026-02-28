@@ -25,3 +25,11 @@ export class SessionVerificationResponseDto {
   reason?: SessionVerificationReason;
   timestamp: Date;
 }
+
+// Used for both login and signup requests; password field contains the
+// AES-encrypted password coming from the client. It will be hashed prior
+// to storage during signup.
+export class SignupRequestDto {
+  email: string;
+  encryptedPassword: string;
+} 

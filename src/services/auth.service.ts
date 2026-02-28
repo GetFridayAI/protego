@@ -3,7 +3,7 @@ import { Neo4jService } from '../services/neo4j.service';
 import { RedisService } from '../services/redis.service';
 import { BcryptService } from '../services/bcrypt.service';
 import { LoggerService } from '../services/logger.service';
-import { LoginRequestDto, LoginResponseDto } from '../common/dto/auth.dto';
+import { LoginRequestDto, LoginResponseDto, SignupRequestDto } from '../common/dto/auth.dto';
 import { ErrorCode, ERROR_CODE_MESSAGES } from '../common/errors/error-codes';
 import { SessionVerificationReason } from '../common/enums/session-verification-reason.enum';
 import { AUTH_MESSAGES, WARNING_MESSAGES, LOG_MESSAGES } from '../common/messages/messages';
@@ -102,6 +102,80 @@ export class AuthService {
         success: true,
         sessionToken,
         message: AUTH_MESSAGES.LOGIN_SUCCESSFUL,
+        timestamp: new Date(),
+      };
+    } catch (error) {
+      this.logger.error(LOG_MESSAGES.LOGIN_ERROR, error);
+      return this.createErrorResponse(
+        ErrorCode.DATABASE_ERROR,
+        false,
+      );
+    }
+  }
+
+  /**
+   * Create a new user, hash password, and start session
+   */
+  async signup(data: SignupRequestDto): Promise<LoginResponseDto> {
+    try {
+      if (!data.email || !data.encryptedPassword) {
+        this.logger.warn(WARNING_MESSAGES.LOGIN_MISSING_INFO, {
+          email: data.email ? 'provided' : 'missing',
+        });
+        return this.createErrorResponse(
+          ErrorCode.MISSING_INFORMATION,
+          false,
+        );
+      }
+
+      // ensure user does not already exist
+      const checkQuery = `
+        MATCH (u:User {email: $email})
+        RETURN u
+      `;
+      const existing = await this.neo4jService.executeQuery(checkQuery, {
+        email: data.email,
+      });
+
+      if (existing.records.length > 0) {
+        return this.createErrorResponse(
+          ErrorCode.EMAIL_ALREADY_EXISTS,
+          false,
+        );
+      }
+
+      // hash incoming (decrypted) password
+      const hashedPassword = await this.bcryptService.hash(
+        data.encryptedPassword,
+      );
+
+      const createQuery = `
+        CREATE (u:User {email: $email, hashedPassword: $hashedPassword, createdAt: datetime()})
+      `;
+
+      await this.neo4jService.executeQuery(createQuery, {
+        email: data.email,
+        hashedPassword,
+      });
+
+      // immediately create session token same as login
+      const sessionToken = generateSessionToken();
+      const sessionTtl = parseInt(
+        this.configService.get('app.jwtExpiration') || '86400',
+      );
+
+      await this.redisService.storeSession(
+        sessionToken,
+        { email: data.email, timestamp: new Date().toISOString() },
+        sessionTtl,
+      );
+
+      this.logger.info(LOG_MESSAGES.USER_LOGGED_IN, { email: data.email });
+
+      return {
+        success: true,
+        sessionToken,
+        message: AUTH_MESSAGES.SIGNUP_SUCCESSFUL,
         timestamp: new Date(),
       };
     } catch (error) {

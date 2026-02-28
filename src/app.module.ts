@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './services/database.module';
 import { LoginController } from './controllers/login.controller';
+import { SignupController } from './controllers/signup.controller';
 import { databaseConfig } from './config/database.config';
 import {
   appConfig,
@@ -33,7 +34,7 @@ import { DecryptPayloadInterceptor } from './interceptors/decrypt-payload.interc
     }),
     DatabaseModule,
   ],
-  controllers: [AppController, LoginController],
+  controllers: [AppController, LoginController, SignupController],
   providers: [
     AppService,
     {

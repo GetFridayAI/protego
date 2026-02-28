@@ -6,6 +6,7 @@
 // ============ Authentication Messages ============
 export const AUTH_MESSAGES = {
   LOGIN_SUCCESSFUL: 'Login successful',
+  SIGNUP_SUCCESSFUL: 'Signup successful',
   LOGOUT_SUCCESSFUL: 'Logged out successfully',
   SESSION_VALID: 'Session is valid',
   SESSION_EXPIRED: 'Session token has expired',
@@ -19,6 +20,7 @@ export const ERROR_MESSAGES = {
   INCORRECT_PASSWORD: 'Password is incorrect',
   INVALID_CREDENTIALS: 'Invalid credentials provided',
   USER_NOT_FOUND: 'User not found',
+  EMAIL_ALREADY_EXISTS: 'Email already registered',
   DATABASE_ERROR: 'Database error occurred',
   SESSION_CREATION_ERROR: 'Failed to create session token',
   CASSANDRA_CONNECTION_FAILED: 'Cassandra connection failed: {{error}}',

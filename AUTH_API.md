@@ -7,6 +7,25 @@ The authentication service provides login, session verification, and logout endp
 ## Endpoints
 
 ### 1. Login
+
+### 1a. Signup
+
+**POST** `/api/auth/signup`
+
+Register a new user. Request body parameters:
+
+```json
+{
+  "email": "user@example.com",
+  "encryptedPassword": "<AES-encrypted-password>"
+}
+```
+
+The encrypted password is hashed with bcrypt before being stored in Neo4j. A session token is created and returned on success.
+
+Responses mirror the login endpoint, including `sessionToken` upon success.
+
+### 1. Login
 **POST** `/api/auth/login`
 
 Authenticate user with email and password credentials.
